@@ -21,4 +21,4 @@ storage_manager:start().
 
 to run mnesia. 
 
-
+After that connect to http://localhost:8080/

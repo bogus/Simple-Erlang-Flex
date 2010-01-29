@@ -1,0 +1,24 @@
+This example demonstrates a very simple application with Flex and Erlang.
+
+Used Erlang modules are these:
+
+erlang-http
+erlang-amf
+mnesia
+
+Download erlang-http and erlang-amf from github and install them appropriately.
+Then change HTTPDIR variable in Makefile. Change this directory to your erlang-http package
+directory. 
+
+Then run these commands:
+
+$ make 
+$ make run
+
+After running "make run" command in erl shell type
+
+storage_manager:start().
+
+to run mnesia. 
+
+

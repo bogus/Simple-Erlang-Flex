@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="622" height="228">
+	<mx:Script source="UsersScript.as" />
+	<mx:RemoteObject id="remoteObject" source="users" destination="my-destination"
+		   showBusyCursor="true" fault="faultHandler(event)">
+    	<mx:method name="get" result="resultHandler(event)"></mx:method>
+    	<mx:method name="add" result="resultHandler(event)"></mx:method>
+    	<mx:method name="del" result="resultHandler(event)"></mx:method>
+  	</mx:RemoteObject>
+	<mx:DataGrid x="31.5" y="20" width="559" dataProvider="{userList}"
+		creationComplete="remoteObject.get()" id="userDG">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Username" dataField="username"/>
+			<mx:DataGridColumn headerText="Name" dataField="name"/>
+			<mx:DataGridColumn headerText="E-Mail" dataField="email"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:Button x="31.5" y="196" label="Add New User" click="{addNewUser()}"/>
+	<mx:Button x="144.5" y="196" label="Delete Selected User" click="{deleteUser()}"/>
+</mx:Canvas>

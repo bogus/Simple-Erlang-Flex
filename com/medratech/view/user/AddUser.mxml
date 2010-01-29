@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="360" height="236"
+	title="Add New User"
+	showCloseButton="true" close="PopUpManager.removePopUp(this)">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			private function addNewUser():void {
+				dispatchEvent(new Event("addNewUser"));
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:Metadata>
+	[Event("addNewUser")]
+	</mx:Metadata>
+	<mx:Form x="10" y="10" width="328" height="183">
+		<mx:FormItem label="Username">
+			<mx:TextInput id="username"/>
+		</mx:FormItem>
+		<mx:FormItem label="Name">
+			<mx:TextInput id="realname"/>
+		</mx:FormItem>
+		<mx:FormItem label="E-Mail">
+			<mx:TextInput id="email"/>
+		</mx:FormItem>
+		<mx:FormItem label="Password">
+			<mx:TextInput id="pass1" displayAsPassword="true"/>
+		</mx:FormItem>
+		<mx:FormItem label="Password (Again)">
+			<mx:TextInput id="pass2" displayAsPassword="true"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Button label="Add User" id="addUser" click="{addNewUser()}"/>
+		</mx:FormItem>
+	</mx:Form>
+	
+</mx:TitleWindow>

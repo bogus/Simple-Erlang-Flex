@@ -1,24 +1,5 @@
-This example demonstrates a very simple application with Flex and Erlang.
+BSSE, network data leakage prevention project web management interface project.
 
-Used Erlang modules are these:
+Under heavy development.
 
-erlang-http
-erlang-amf
-mnesia
 
-Download erlang-http and erlang-amf from github and install them appropriately.
-Then change HTTPDIR variable in Makefile. Change this directory to your erlang-http package
-directory. 
-
-Then run these commands:
-
-$ make 
-$ make run
-
-After running "make run" command in erl shell type
-
-storage_manager:start().
-
-to run mnesia. 
-
-After that connect to http://localhost:8080/

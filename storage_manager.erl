@@ -1,90 +1,84 @@
+%%%-------------------------------------------------------------------
+%%% @author Burak OGUZ <burak@medratech.com>
+%%% @copyright 2010, Burak OGUZ
+%%% @doc Storage Manager for BSSE Web Application.
+%%% @end
+%%%-------------------------------------------------------------------
 -module(storage_manager).
+-author("burak@medratech.com").
+-behaviour(gen_server).
 
--include_lib("stdlib/include/qlc.hrl").
+%% API
+-export([start_link/0, 
+	stop/0,
+	get_objects/1,
+	run_transaction/1,
+	insert_object/1,
+	update_object/1,
+	delete_object/1]).
 
--compile([export_all]).
--define(SERVER, storage_manager).
+%% gen_server callbacks
+-export([init/1,
+	handle_call/3,
+	handle_cast/2,
+	handle_info/2,
+	terminate/2,
+	code_change/3]).
 
-%%
-%% API Functions
-%%
+-include("bsse_records.hrl").
 
--record(user, {username, realname, email, password}).
+-record(state, {id=0}).
 
-save_user(Username, Realname, Email, Password) ->
-	global:send(?SERVER, {save_user, Username, Realname, Email, Password}).
-
-find_users() ->
-	global:send(?SERVER, {find_users, self()}),
-	receive
-		{ok, Users} ->
-			Users
-	end.
-
-delete_user(Username, Realname, Email) ->
-        global:send(?SERVER, {del_user, Username, Realname, Email}).
-
-get_users() ->
-	F = fun() ->
-		Query = qlc:q([{object, <<"User">>,[{username, M#user.username}, {name, M#user.realname}, {email, M#user.email}, {password, M#user.password}]} || M <- mnesia:table(user)]),
-		Results = qlc:e(Query),
-		Results 
-	end,
-	{atomic, Users} = mnesia:transaction(F),
-	Users.
-
-erase_user(Username, Realname, Email) ->
-        F = fun() ->
-                Query = qlc:q([M || M <- mnesia:table(user), M#user.username=:=Username, M#user.realname=:=Realname, M#user.email=:=Email]),
-                Results = qlc:e(Query),
-		lists:foreach(fun(User) -> mnesia:delete_object(User) end, Results)
-        end,
-	mnesia:transaction(F).
-
-store_user(Username, Realname, Email, Password) ->
-	F = fun() ->
-		mnesia:write(#user{username=Username, realname=Realname, email=Email, password=Password}) 
-	end,
-	mnesia:transaction(F).
-	
-
-init_store() ->
-	mnesia:create_schema([node()]),
-	mnesia:start(),
-	try
-		mnesia:table_info(user, type)
-	catch
-		exit: _->
-			mnesia:create_table(user,[{attributes, record_info(fields, user)},
-								{type, bag},
-								{disc_copies, [node()]}])
-	end.
-
-start() ->
-	server_util:start(?SERVER, {storage_manager, run, [true]}).
+start_link() -> 
+	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop() ->
-	server_util:stop(?SERVER).
+    	gen_server:call({local,?MODULE}, stop).
 
-run(FirstTime) ->
-	if 
-		FirstTime == true ->
-		   init_store(),
-		   run(false);
-		true ->
-			receive 
-				{save_user, Username, Realname, Email, Password} ->
-					store_user(Username, Realname, Email, Password),
-					run(FirstTime);
-				{del_user, Username, Realname, Email} ->
-					erase_user(Username, Realname, Email),
-					run(FirstTime);
-				{find_users, Pid} ->
-					Users = get_users(),
-					Pid ! {ok, Users},
-					run(FirstTime);
-				shutdown ->
-					mnesia:stop(),
-					io:format("Shutting down.. ~n")
-		end
-	end.
+get_objects(Function) ->
+        gen_server:call(?MODULE, {get_objects, Function}).
+run_transaction(Function) ->
+        gen_server:call(?MODULE, {run_transaction, Function}).
+insert_object(Function) ->
+        gen_server:call(?MODULE, {run_transaction, Function}).
+update_object(Function) ->
+        gen_server:call(?MODULE, {run_transaction, Function}).
+delete_object(Function) ->
+        gen_server:call(?MODULE, {run_transaction, Function}).
+
+init([]) ->
+	mnesia:create_schema([node()]),
+        mnesia:start(),
+        try
+                mnesia:table_info(user, type)
+        catch
+                exit: _->
+                        mnesia:create_table(user,[{attributes, record_info(fields, user)},
+                                                                {type, bag},
+                                                                {disc_copies, [node()]}])
+        end,	
+    	{ok, #state{}}.
+
+handle_call({get_objects, Function}, _From, State) ->
+	{atomic, Users} = mnesia:transaction(Function),
+	{reply, Users, State};
+
+handle_call({run_transaction, Function}, _From, State) ->
+	mnesia:transaction(Function),
+	{reply, [], State};		
+
+handle_call(stop, _From, State) ->
+    	{stop, normalStop, State}.
+
+handle_cast(_Msg, State) ->
+    	{noreply, State}.
+
+handle_info(_Msg, State) -> 
+	{noreply, State}.
+
+terminate(_Reason, _State) ->
+    	ok.
+
+code_change(_OldVsn, State, _Extra) ->
+    	{ok, State}.
+
